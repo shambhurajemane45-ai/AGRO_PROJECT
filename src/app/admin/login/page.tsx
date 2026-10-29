@@ -7,7 +7,7 @@ import { PortalLoginForm } from "@/components/shared/PortalLoginForm";
 export const metadata: Metadata = {
   title: "Admin Portal Login",
   description:
-    "Manufacturing administration portal login interface (Phase 1 UI foundation).",
+    "Manufacturing administration portal sign-in enforced by Firebase Authentication and Firebase Admin SDK role verification.",
 };
 
 export default function AdminLoginPage() {
@@ -15,15 +15,17 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex flex-1 items-center py-12 sm:py-16">
+      <main className="flex flex-1 items-center py-10 sm:py-14">
         <Container size="narrow">
           <PortalLoginForm
             role="admin"
-            badgeText="Manufacturing Administration Portal"
+            badgeText="Authorized Company Personnel"
             portalTitle="Administrator Sign In"
-            portalSubtitle="Restricted entry point for authorized manufacturing administrators to manage products, inventory batches, orders, and validation certificates."
+            portalSubtitle="Restricted login for authorized manufacturing administrators."
             emailPlaceholder="admin@company-domain.placeholder"
-            securityNote="Administrative authorization is never enforced by UI hiding or hardcoded credentials. Server-side role verification via Firebase Admin SDK will be implemented in Phase 2."
+            securityNote="Public admin registration is disabled. Administrative authorization is verified on the server using Firebase Admin SDK session cookies and role claims."
+            backHref="/admin"
+            backLabel="Back to Admin Portal"
           />
         </Container>
       </main>

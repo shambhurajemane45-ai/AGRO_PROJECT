@@ -1,6 +1,6 @@
 # System Architecture — Agriculture Product Manufacturing Company Digital Platform
 
-> **Implementation Status Note**: In **Phase 1**, the frontend Next.js App Router foundation, TypeScript strict configuration, reusable UI design system, and initial routes (`/`, `/customer/login`, `/admin/login`) are implemented. All Firebase, Claude AI, Razorpay, and WhatsApp Business components described below represent the **planned architecture** for Phases 2 through 12.
+> **Implementation Status Note**: In **Phase 1**, the frontend Next.js App Router foundation, TypeScript strict configuration, reusable UI design system, and initial user journey routes (`/`, `/customer`, `/customer/login`, `/customer/signup`, `/admin`, `/admin/login`) are implemented. All Firebase, Claude AI, Razorpay, and WhatsApp Business components described below represent the **planned architecture** for Phases 2 through 12.
 
 ---
 

@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Phase 2 Security Baseline:
+    // Product leaflets, SDS documents, and batch validation certificates are
+    // scheduled for Phase 3 and Phase 6. Direct client storage access is denied.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

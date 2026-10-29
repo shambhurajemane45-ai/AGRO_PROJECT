@@ -1,6 +1,6 @@
 # Project Overview — Agriculture Product Manufacturing Company Digital Platform
 
-> **Implementation Status Note**: This document describes the overall functional scope of the platform across all planned phases. At the completion of **Phase 1**, only the project foundation, design system, landing page (`/`), customer login UI (`/customer/login`), and admin login UI (`/admin/login`) are implemented. All portals, database workflows, payment processing, certificate generation, and AI features described below are **planned** for subsequent phases.
+> **Implementation Status Note**: This document describes the overall functional scope of the platform across all planned phases. At the completion of **Phase 1**, the project foundation, design system, welcome landing page (`/`), customer portal entry (`/customer`), customer login UI (`/customer/login`), customer sign-up UI (`/customer/signup`), admin portal entry (`/admin`), and admin login UI (`/admin/login`) are implemented. All authenticated dashboards, database workflows, payment processing, certificate generation, and AI features described below are **planned** for subsequent phases.
 
 ---
 

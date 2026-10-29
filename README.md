@@ -4,7 +4,7 @@
 
 This repository contains the production foundation for an **Agriculture Product Manufacturing Company Digital Platform**. It is designed to support:
 
-- **Customer & Distributor Portal**: Browsing verified agricultural products, placing orders, tracking fulfilment, downloading batch validation certificates, and consulting approved agricultural guidance.
+- **Customer & Dealer Portal**: Browsing verified agricultural products, watching agricultural guidance videos, exploring seasonal offers, placing and managing orders, and downloading batch validation certificates.
 - **Manufacturing Admin Portal**: Managing product master records, manufacturing batches, order workflows, quality validation certificates, and dispatch operations.
 - **Data Integrity Policy**: No company identity, products, prices, certifications, addresses, or agricultural claims are fabricated. Where verified company records are not yet supplied, clearly labelled placeholders are used.
 
@@ -43,11 +43,18 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Available Phase 1 Routes
+### Available Phase 1 & Phase 2 Routes & User Journey
 
-- `/` — Company Landing Page (Header, Hero, Portal Entry Points, Product/Company/Agronomy Placeholders, Planned Architecture, Footer)
-- `/customer/login` — Customer & Distributor Portal Login UI
-- `/admin/login` — Manufacturing Admin Portal Login UI
+- `/` — **Welcome & Portal Selection Landing Page** ("Growing Better Agriculture, Together" hero + prominent **Customer Portal** and **Admin Portal** selection cards)
+- `/customer` — **Customer Portal Entry Page** (Friendly welcome overview, "Login to Your Account", and "Create New Account" actions)
+- `/customer/login` — **Customer Login** (Firebase Authentication email/password sign-in, server session cookie exchange, link to `/customer/signup` and back to `/customer`)
+- `/customer/signup` — **Customer Sign Up** (Firebase Authentication registration, server-verified `customer` role provisioning in Firestore, link to `/customer/login`)
+- `/customer/dashboard` — **Role-Protected Customer Dashboard** (Protected by `src/proxy.ts` and server-side `requireRoleSession("customer")` via Firebase Admin SDK)
+- `/admin` — **Admin Portal Entry Page** (Authorized-personnel gateway with single primary "Continue to Admin Login" CTA)
+- `/admin/login` — **Admin Login** (Restricted administrative sign-in with server-side `admin` role verification via Firebase Admin SDK, no public registration link)
+- `/admin/dashboard` — **Role-Protected Admin Dashboard** (Protected by `src/proxy.ts` and server-side `requireRoleSession("admin")` via Firebase Admin SDK)
+- `/api/auth/session` — **Server Session Verification & Creation Endpoint** (`GET` / `POST`)
+- `/api/auth/logout` — **Server Session Revocation & Cookie Cleanup Endpoint** (`POST`)
 
 ---
 
@@ -86,20 +93,36 @@ SUPRIYA_AGRO/
 ├── src/
 │   ├── app/
 │   │   ├── admin/
-│   │   │   └── login/
-│   │   │       └── page.tsx     # Admin login UI route (/admin/login)
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.tsx     # Role-protected Admin Dashboard (/admin/dashboard)
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx     # Admin login route (/admin/login)
+│   │   │   └── page.tsx         # Admin portal entry route (/admin)
+│   │   ├── api/
+│   │   │   └── auth/
+│   │   │       ├── logout/
+│   │   │       │   └── route.ts # Server session revocation & cookie deletion
+│   │   │       └── session/
+│   │   │           └── route.ts # Firebase ID token verification & RBAC session cookie
 │   │   ├── customer/
-│   │   │   └── login/
-│   │   │       └── page.tsx     # Customer login UI route (/customer/login)
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.tsx     # Role-protected Customer Dashboard (/customer/dashboard)
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx     # Customer login route (/customer/login)
+│   │   │   ├── signup/
+│   │   │   │   └── page.tsx     # Customer registration route (/customer/signup)
+│   │   │   └── page.tsx         # Customer portal entry route (/customer)
 │   │   ├── globals.css          # Design system tokens (colors, spacing, borders, focus states)
 │   │   ├── layout.tsx           # Root HTML layout and typography setup
-│   │   └── page.tsx             # Company landing page (/)
+│   │   └── page.tsx             # Welcome & portal selection landing page (/)
 │   ├── components/
 │   │   ├── layout/
 │   │   │   ├── Footer.tsx       # Platform footer with placeholder disclosures
-│   │   │   └── Header.tsx       # Responsive header and navigation
+│   │   │   └── Header.tsx       # Responsive header and portal navigation
 │   │   ├── shared/
-│   │   │   └── PortalLoginForm.tsx # Reusable validated login form for Customer & Admin UI
+│   │   │   ├── CustomerSignupForm.tsx # Firebase-connected customer sign-up component
+│   │   │   ├── LogoutButton.tsx       # Server + client sign-out button
+│   │   │   └── PortalLoginForm.tsx    # Reusable Firebase login form for Customer & Admin
 │   │   └── ui/
 │   │       ├── Button.tsx       # Accessible button / link-button component
 │   │       ├── Card.tsx         # Surface card component
@@ -110,23 +133,29 @@ SUPRIYA_AGRO/
 │   ├── config/
 │   │   └── site.ts              # Labelled placeholders and navigation config
 │   ├── lib/
-│   │   ├── integrations.ts      # Documented extension contracts for future phases
-│   │   └── validation.ts        # Client-side form validation rules
-│   └── types/
-│       └── index.ts             # Shared strict TypeScript interfaces
+│   │   ├── auth/
+│   │   │   ├── constants.ts     # Session cookie names, durations, and route paths
+│   │   │   └── server.ts        # Server-only Firebase Admin session & RBAC verification
+│   │   ├── firebase/
+│   │   │   ├── admin.ts         # Server-only Firebase Admin SDK initialization
+│   │   │   └── client.ts        # Browser Firebase Client SDK initialization
+│   │   ├── integrations.ts      # Documented extension contracts
+│   │   └── validation.ts        # Client-side login & sign-up validation rules
+│   ├── types/
+│   │   └── index.ts             # Shared strict TypeScript interfaces
+│   └── proxy.ts                 # Next.js 16 request proxy protecting /customer/* and /admin/*
 ├── .env.example                 # Placeholder environment variables (no secrets)
-├── .gitignore                   # Protects .env.local, node_modules, and build artifacts
-├── eslint.config.mjs            # ESLint configuration
-├── next.config.ts               # Next.js configuration
-├── package.json                 # Scripts and dependencies
-└── tsconfig.json                # Strict TypeScript configuration
+├── firebase.json                # Firebase security rules configuration
+├── firestore.rules              # Cloud Firestore RBAC security rules
+├── storage.rules                # Firebase Storage security rules
+└── package.json                 # Scripts and dependencies
 ```
 
 ---
 
-## 7. Current Phase Limitations (Phase 1)
+## 7. Current Phase Status & Boundaries (Phase 2)
 
-- **UI & Architecture Foundation Only**: Phase 1 establishes the visual design system, responsive layouts, strict TypeScript structure, and initial routes (`/`, `/customer/login`, `/admin/login`).
-- **No Live Authentication Yet**: Submitting the Customer or Admin login form validates inputs (`email` and `password`) on the client and displays a transparent notice explaining that authentication is not active in Phase 1. No fake login success or fake session is created. Real authentication via **Firebase Authentication** and **Firebase Admin SDK** is scheduled for **Phase 2**.
-- **Labelled Placeholders**: Company name, registration numbers, addresses, product items, and certifications are intentionally represented as labelled placeholders until official company data is supplied.
-- **No Unconfigured Third-Party SDKs Installed**: Firebase, Anthropic Claude, Razorpay, and WhatsApp Business SDKs are documented as extension points and will be installed in their dedicated roadmap phases.
+- **Firebase Authentication & Server RBAC Active**: Phase 2 implements Firebase Client SDK authentication, Firebase Admin SDK server-side token & session cookie verification, strict `customer` vs `admin` role-based access control, Next.js 16 `src/proxy.ts` route protection, role-protected dashboards (`/customer/dashboard` and `/admin/dashboard`), and `firestore.rules` / `storage.rules`.
+- **Environment Configuration Required for Live Auth**: Copy `.env.example` to `.env.local` and populate `NEXT_PUBLIC_FIREBASE_*` and `FIREBASE_ADMIN_*` with your Firebase project credentials. No fake sessions or hardcoded credentials exist.
+- **Strict Scope Boundary**: Product catalogue, batch records, orders, payments, certificates, videos, seasonal offers, and AI assistant features are not started in Phase 2 and remain scheduled for their designated phases.
+

@@ -1,0 +1,181 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // -------------------------------------------------------------------------
+    // Helper Functions — Phase 2 Authentication & Role-Based Access Control
+    // -------------------------------------------------------------------------
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function hasActiveAdminProfile() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function hasActiveCustomerProfile() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'customer'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'admin'
+        || request.auth.token.admin == true
+        || hasActiveAdminProfile()
+      );
+    }
+
+    function isValidProductDocument(data) {
+      return data.sku is string
+        && data.sku.size() >= 2
+        && data.name is string
+        && data.name.size() >= 2
+        && data.category is string
+        && data.category.size() >= 2
+        && data.shortDescription is string
+        && data.shortDescription.size() >= 10
+        && data.composition is string
+        && data.composition.size() >= 3
+        && data.targetCrops is list
+        && data.targetCrops.size() >= 1
+        && data.dosageAndApplication is string
+        && data.dosageAndApplication.size() >= 5
+        && data.packSizes is list
+        && data.packSizes.size() >= 1
+        && (data.unitPrice == null || (data.unitPrice is number && data.unitPrice >= 0))
+        && data.safetyAndStorage is string
+        && data.registrationNumber is string
+        && (data.status == 'active' || data.status == 'draft' || data.status == 'archived')
+        && data.createdAt is string
+        && data.updatedAt is string
+        && data.createdByUid is string
+        && data.updatedByUid is string
+        && data.keys().hasOnly([
+          'sku',
+          'name',
+          'category',
+          'shortDescription',
+          'composition',
+          'targetCrops',
+          'dosageAndApplication',
+          'packSizes',
+          'unitPrice',
+          'safetyAndStorage',
+          'registrationNumber',
+          'status',
+          'createdAt',
+          'updatedAt',
+          'createdByUid',
+          'updatedByUid'
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Users Collection (/users/{uid})
+    // Strict RBAC: Clients can never self-assign the 'admin' role or escalate
+    // privileges. Role assignment for admins is restricted to Firebase Admin SDK.
+    // -------------------------------------------------------------------------
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.role == 'customer'
+        && request.resource.data.status == 'active'
+        && request.resource.data.email is string
+        && request.resource.data.fullName is string
+        && request.resource.data.mobile is string
+        && request.resource.data.keys().hasAll([
+          'uid',
+          'email',
+          'fullName',
+          'mobile',
+          'role',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'email',
+          'fullName',
+          'mobile',
+          'role',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ]);
+
+      allow update: if isAdmin() || (
+        isOwner(uid)
+        && resource.data.role == 'customer'
+        && resource.data.status == 'active'
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == 'customer'
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.fullName is string
+        && request.resource.data.mobile is string
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'email',
+          'fullName',
+          'mobile',
+          'role',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+      );
+
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 3: Products Collection (/products/{productId})
+    // - Admins can read and manage all products (active, draft, archived).
+    // - Active authenticated customers can read ONLY 'active' products.
+    // - Customers can never create, update, or delete products.
+    // -------------------------------------------------------------------------
+    match /products/{productId} {
+      allow read: if isAdmin() || (
+        hasActiveCustomerProfile()
+        && resource.data.status == 'active'
+      );
+      allow create, update: if isAdmin() && isValidProductDocument(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // Planned Phase 4+ Collections — Explicitly Locked Down
+    // -------------------------------------------------------------------------
+
+    match /batches/{batchId} {
+      allow read, write: if false;
+    }
+
+    match /orders/{orderId} {
+      allow read, write: if false;
+    }
+
+    match /certificates/{certificateId} {
+      allow read, write: if false;
+    }
+
+    // Default deny for all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

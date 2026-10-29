@@ -8,8 +8,8 @@ This roadmap defines the 12 sequential engineering phases for building and deplo
 
 | Phase | Name | Status |
 | :--- | :--- | :--- |
-| **Phase 1** | **Foundation** | **Completed (Current Phase)** |
-| **Phase 2** | Firebase Authentication and Security | Planned |
+| **Phase 1** | Foundation | Completed |
+| **Phase 2** | **Firebase Authentication and Security** | **Completed (Current Phase)** |
 | **Phase 3** | Database and Core Business Logic | Planned |
 | **Phase 4** | Admin Portal | Planned |
 | **Phase 5** | Customer Portal | Planned |
@@ -25,18 +25,18 @@ This roadmap defines the 12 sequential engineering phases for building and deplo
 
 ## Detailed Phase Breakdown
 
-### 1. Foundation *(Completed in Current Phase)*
+### 1. Foundation *(Completed)*
 - Initialize Next.js (App Router) with strict TypeScript, Tailwind CSS, and ESLint.
 - Establish the agricultural-business design system and reusable UI component library.
 - Implement the Landing Page (`/`) with honest, clearly labelled placeholders.
 - Implement the Customer Login UI (`/customer/login`) and Admin Login UI (`/admin/login`) with client-side validation and explicit Phase 1 status disclosures.
 - Configure `.env.example`, `.gitignore`, and foundational architecture documentation.
 
-### 2. Firebase Authentication and Security *(Planned)*
+### 2. Firebase Authentication and Security *(Completed in Current Phase)*
 - Install and configure the Firebase Client SDK and Firebase Admin SDK.
-- Implement real email/password sign-in on `/customer/login` and `/admin/login`.
-- Implement server-side session/token verification and Role-Based Access Control (RBAC) differentiating `customer` and `admin` roles.
-- Protect `/customer/*` and `/admin/*` routes against unauthorized access on the server.
+- Implement real email/password sign-in on `/customer/login` and `/admin/login` and customer registration on `/customer/signup`.
+- Implement server-side session/token verification (`/api/auth/session`, `/api/auth/logout`, `src/lib/auth/server.ts`) and Role-Based Access Control (RBAC) differentiating `customer` and `admin` roles.
+- Protect `/customer/*` and `/admin/*` routes against unauthorized access on the server (`src/proxy.ts` and `requireRoleSession()`) and provide role-protected dashboards (`/customer/dashboard` and `/admin/dashboard`) plus `firestore.rules` and `storage.rules`.
 
 ### 3. Database and Core Business Logic *(Planned)*
 - Configure Cloud Firestore and Firebase Storage with strict security rules.
